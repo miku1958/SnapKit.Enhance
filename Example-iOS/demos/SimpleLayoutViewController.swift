@@ -54,6 +54,18 @@ class SimpleLayoutViewController: UIViewController {
         view.addSubview(greenView)
 
         view.setNeedsUpdateConstraints()
+		
+		DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+			self.blueView.snp.updateConstraints { make in
+				make.bottom.equalTo(self.blackView.snp.top).offset(40.0)
+			}
+			self.blackView.snp.updateConstraints { make in
+				make.height.equalTo(self.blueView.snp.width).multipliedBy(2)
+			}
+			UIView.animate(withDuration: 2) {
+				self.view.layoutIfNeeded()
+			}
+		}
     }
 
     override func updateViewConstraints() {
@@ -62,7 +74,8 @@ class SimpleLayoutViewController: UIViewController {
 
             blackView.snp.makeConstraints { make in
                 make.center.equalTo(view)
-                make.size.equalTo(CGSize(width: 100, height: 100))
+                make.width.equalTo(100)
+				make.height.equalTo(blueView.snp.width).multipliedBy(1)
             }
 
             redView.snp.makeConstraints { make in
