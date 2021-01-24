@@ -309,19 +309,23 @@ public final class Constraint {
         let layoutConstraints = self.layoutConstraints
 
         if updatingExisting {
-            var existingLayoutConstraints: [LayoutConstraint] = []
-            for constraint in item.constraints {
-                existingLayoutConstraints += constraint.layoutConstraints
-            }
-
             for layoutConstraint in layoutConstraints {
-                let existingLayoutConstraint = existingLayoutConstraints.first { $0 == layoutConstraint }
-                guard let updateLayoutConstraint = existingLayoutConstraint else {
-                    fatalError("Updated constraint could not find existing matching constraint to update: \(layoutConstraint)")
-                }
-
-                let updateLayoutAttribute = (updateLayoutConstraint.secondAttribute == .notAnAttribute) ? updateLayoutConstraint.firstAttribute : updateLayoutConstraint.secondAttribute
-                updateLayoutConstraint.constant = self.constant.constraintConstantTargetValueFor(layoutAttribute: updateLayoutAttribute)
+				for constraint in item.constraints {
+					if let index = constraint.layoutConstraints.firstIndex(where: { $0 == layoutConstraint
+					}) {
+						let layout = constraint.layoutConstraints[index]
+						layout.isActive = false
+						
+						layoutConstraint.shouldBeArchived = layout.shouldBeArchived
+						layoutConstraint.identifier = layout.identifier
+						
+						layoutConstraint.isActive = true
+						constraint.layoutConstraints.remove(at: index)
+						constraint.layoutConstraints.append(layoutConstraint)
+						return
+					}
+				}
+				fatalError("Updated constraint could not find existing matching constraint to update: \(layoutConstraint)")
             }
         } else {
             NSLayoutConstraint.activate(layoutConstraints)
@@ -338,4 +342,8 @@ public final class Constraint {
         NSLayoutConstraint.deactivate(layoutConstraints)
         item.remove(constraints: [self])
     }
+	internal func deactivateWithoutRemove() {
+		let layoutConstraints = self.layoutConstraints
+		NSLayoutConstraint.deactivate(layoutConstraints)
+	}
 }
